@@ -1,0 +1,34 @@
+FOR ADDING THE MEASURES FOR KPI DATA CARDS
+
+Average Daily Volume = 
+AVERAGE(stocks[volume])
+
+Market Cap = 
+SUM(stocks[PharmaRevenue]) + SUM(stocks[GenericRevenue]) + SUM(stocks[VaccineRevenue])
+
+Market Sentiment = 50
+
+Sector Index = 
+AVERAGE(stocks[PctChange])
+
+Top Gainers = 
+MAXX(
+    FILTER(stocks, stocks[PctChange] > 0),
+    stocks[PctChange]
+)
+
+Top Losers = 
+MINX(
+    FILTER(stocks, stocks[PctChange] < 0),
+    stocks[PctChange]
+)
+
+Total Generic Revenue = 
+SUM(stocks[GenericRevenue])
+
+Total Pharma Revenue = 
+SUM(stocks[PharmaRevenue])
+
+Total R&D Spending = 
+SUM(stocks[R&D_Spending])
+

@@ -1,0 +1,90 @@
+FINANCIAL DASHBOARD
+API
+( FOR MARKET UNDERSTANDING )
+
+M CODE
+let
+    // ========================================
+    // Step 1: Define list of pharma stock symbols
+    // ========================================
+    symbols = {
+        "SUNPHARMA.NS","DRREDDY.NS","CIPLA.NS","DIVISLAB.NS",
+        "APOLLOHOSP.NS","FORTIS.NS","LUPIN.NS","CADILAHC.NS",
+        "ALKEM.NS","GLENMARK.NS"
+    },
+
+    // ========================================
+    // Step 2: Function to fetch stock data
+    // ========================================
+    GetStockData = (sym as text) =>
+        let
+            url = "https://query1.finance.yahoo.com/v8/finance/chart/" & sym & "?interval=1d&range=3mo",
+            Source = try Json.Document(Web.Contents(url)) otherwise null,
+            Chart = if Source <> null and Record.HasFields(Source, "chart") then Source[chart] else null,
+            Result = if Chart <> null and List.Count(Chart[result]) > 0 then Chart[result]{0} else null,
+            Timestamps = if Result <> null and Record.HasFields(Result, "timestamp") then Result[timestamp] else {},
+            Indicators = if Result <> null and Record.HasFields(Result, "indicators") then Result[indicators] else null,
+            Quote = if Indicators <> null and Record.HasFields(Indicators, "quote") then Indicators[quote]{0} else null,
+            AdjClose = if Indicators <> null and Record.HasFields(Indicators, "adjclose") then Indicators[adjclose]{0} else null,
+            Datetime = List.Transform(Timestamps, each #datetime(1970,1,1,0,0,0) + #duration(0,0,0,_)),
+
+            TableData = if Quote <> null and List.Count(Datetime) = List.Count(Quote[close]) then
+                            Table.FromColumns({
+                                Datetime,
+                                Quote[open],
+                                Quote[high],
+                                Quote[low],
+                                Quote[close],
+                                Quote[volume],
+                                if AdjClose <> null then AdjClose[adjclose] else List.Repeat({null}, List.Count(Datetime))
+                            }, {"datetime","open","high","low","close","volume","adjclose"})
+                        else
+                            #table({"datetime","open","high","low","close","volume","adjclose"}, {}),
+
+            AddSymbol = Table.AddColumn(TableData, "symbol", each sym),
+            AddChange = Table.AddColumn(AddSymbol, "%Change", each if [open] <> null and [open] <> 0 then ([close]-[open])/[open] else null)
+        in
+            AddChange,
+
+    // ========================================
+    // Step 3: Combine stock data for all symbols
+    // ========================================
+    tables = List.Transform(symbols, each GetStockData(_)),
+    StockData = Table.Combine(tables),
+
+    // ========================================
+    // Step 4: Static R&D + Segment Revenue table
+    // ========================================
+    RDSegment = #table(
+        {"symbol","R&D_Spending","PharmaRevenue","GenericRevenue","VaccineRevenue"},
+        {
+            {"SUNPHARMA.NS",   2500,  32000, 15000, 0},
+            {"DRREDDY.NS",     1800,  22000, 12000, 0},
+            {"CIPLA.NS",       1200,  28000,  9000, 0},
+            {"DIVISLAB.NS",    1400,  18000, 11000, 0},
+            {"APOLLOHOSP.NS",  1000,  40000,     0, 0},
+            {"FORTIS.NS",       700,  25000,     0, 0},
+            {"LUPIN.NS",       1300,  21000,  8000, 0},
+            {"CADILAHC.NS",    1100,  17000,  7000, 3000},
+            {"ALKEM.NS",        900,  16000,  6000, 0},
+            {"GLENMARK.NS",     800,  15000,  5000, 0}
+        }
+    ),
+
+    // ========================================
+    // Step 5: Merge stock data with fundamentals
+    // ========================================
+    Merged = Table.NestedJoin(
+                StockData, {"symbol"},
+                RDSegment, {"symbol"},
+                "Fundamentals",
+                JoinKind.LeftOuter
+             ),
+    Expanded = Table.ExpandTableColumn(
+                  Merged, "Fundamentals",
+                  {"R&D_Spending","PharmaRevenue","GenericRevenue","VaccineRevenue"},
+                  {"R&D_Spending","PharmaRevenue","GenericRevenue","VaccineRevenue"}
+              )
+in
+    Expanded
+

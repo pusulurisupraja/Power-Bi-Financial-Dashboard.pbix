@@ -1,0 +1,38 @@
+FOR ADDING THE MEASURES FOR KPI DATA CARDS
+
+Financial KPIs
+[Total Revenue] = SUM(Query1[Revenue])
+[Total Expenses] = SUM(Query1[Expenses])
+[Total Net Profit] = SUM(Query1[NetProfit])
+[Net Profit Margin %] = DIVIDE([Total Net Profit], [Total Revenue], 0)
+
+ Cash Flow KPIs
+[Total Operating CF] = SUM(Query1[OperatingCF])
+[Total Investing CF] = SUM(Query1[InvestingCF])
+[Total Financing CF] = SUM(Query1[FinancingCF])
+
+R&D & Segment KPIs
+[Total R&D Spending] = SUM(Query1[R&D_Spending])
+[Total Pharma Revenue] = SUM(Query1[PharmaRevenue])
+[Total Generic Revenue] = SUM(Query1[GenericRevenue])
+[Total Vaccine Revenue] = SUM(Query1[VaccineRevenue])
+[R&D Intensity %] = AVERAGE(Query1[R&D_Intensity])
+
+Profitability Ratios
+[ROI %] = AVERAGE(Query1[ROI])
+[ROE %] = AVERAGE(Query1[ROE])
+[Expense Ratio %] = DIVIDE([Total Expenses], [Total Revenue], 0)
+
+Leverage & Liquidity KPIs
+[Debt-to-Equity Ratio] = AVERAGE(Query1[DebtEquity])
+[Current Ratio] = AVERAGE(Query1[CurrentRatio])
+[High Leverage Count] = COUNTROWS(FILTER(Query1, Query1[LeverageCategory] = "High Leverage"))
+[Low Leverage Count] = COUNTROWS(FILTER(Query1, Query1[LeverageCategory] = "Low Leverage"))
+[Weak Liquidity Count] = COUNTROWS(FILTER(Query1, Query1[LiquidityCategory] = "Weak Liquidity"))
+[Healthy Liquidity Count] = COUNTROWS(FILTER(Query1, Query1[LiquidityCategory] = "Healthy Liquidity"))
+
+Stock Performance KPIs
+[Average Daily % Change] = AVERAGE(Query1[%Change])
+[Maximum Daily % Change] = MAX(Query1[%Change])
+[Minimum Daily % Change] = MIN(Query1[%Change])
+
